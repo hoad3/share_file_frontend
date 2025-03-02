@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 
 const API_URL = process.env.REACT_APP_API_URL;
+console.log("Login URL:", process.env.REACT_APP_LOGIN_URL, "day la link2:", API_URL);
 interface AuthState {
     user: any;
     loading: boolean;
