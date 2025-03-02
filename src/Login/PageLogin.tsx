@@ -17,7 +17,6 @@ const PageLogin = () =>{
         const result = await dispatch(loginUser({ account, password }));
         if (loginUser.fulfilled.match(result)) {
             const userId = result.payload.userId; // Lấy userId từ kết quả API
-            console.log("🔍 userId trước khi điều hướng:", userId);
             navigate(`/sharefile/${userId}`); // Chuyển hướng khi đăng nhập thành công
         }
     };
