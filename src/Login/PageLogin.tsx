@@ -8,7 +8,7 @@ const PageLogin = () =>{
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
-    const { user, loading, error } = useSelector((state: RootState) => state.auth);
+    const { loading, error } = useSelector((state: RootState) => state.auth);
 
     const [account, setAccount] = useState("");
     const [password, setPassword] = useState("");

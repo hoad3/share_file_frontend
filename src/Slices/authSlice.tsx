@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -33,8 +33,7 @@ export const loginUser = createAsyncThunk(
                 throw new Error("Đăng nhập thất bại!");
             }
 
-            const data = await response.json();
-            return data;
+            return await response.json();
         } catch (error: any) {
             return rejectWithValue(error.message);
         }
