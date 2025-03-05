@@ -86,27 +86,26 @@ const FILES_URL = process.env.REACT_APP_UPLOAD_URL;
 
         const downloadFile = async (url: string) => {
             try {
-                const response = await fetch(url, { mode: "cors" }); // Thêm mode: "cors" để tránh lỗi chặn tải xuống
-                if (!response.ok) throw new Error("Lỗi tải file");
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Lỗi khi tải file");
 
                 const blob = await response.blob();
+                const link = document.createElement("a");
                 const blobUrl = window.URL.createObjectURL(blob);
 
-                // Tạo thẻ <a> để tải file
-                const link = document.createElement("a");
                 link.href = blobUrl;
-                link.setAttribute("download", url.split("/").pop() || "file_download"); // Đặt tên file tải xuống
+                link.setAttribute("download", url.split("/").pop() || "file_download");
                 document.body.appendChild(link);
                 link.click();
-
-                // Xóa URL tạm sau khi tải xong
                 document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
+
+                // 🛠️ Giải phóng bộ nhớ để tránh rò rỉ
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
             } catch (error) {
                 console.error("Lỗi tải file:", error);
-                alert("Không thể tải file. Vui lòng thử lại!");
             }
         };
+
         return (
             <div className="w-full h-screen flex justify-center items-center bg-gray-800 px-4">
                 <div className="w-full max-w-md h-auto flex flex-col border-gray-100 p-5 bg-white rounded-lg shadow-lg">
