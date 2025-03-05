@@ -84,13 +84,24 @@ const FILES_URL = process.env.REACT_APP_UPLOAD_URL;
             }
         };
 
-        const downloadFile = (url: string) => {
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", url.split("/").pop() || "file_download");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        const downloadFile = async (url: string) => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                const link = document.createElement("a");
+                link.href = blobUrl;
+                link.setAttribute("download", url.split("/").pop() || "file_download"); // Đặt tên file tải xuống
+                document.body.appendChild(link);
+                link.click();
+
+                // Dọn dẹp bộ nhớ sau khi tải xong
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                console.error("Lỗi tải file:", error);
+            }
         };
         return (
             <div className="w-full h-screen flex justify-center items-center bg-gray-800 px-4">
