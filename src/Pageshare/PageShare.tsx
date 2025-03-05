@@ -86,21 +86,25 @@ const FILES_URL = process.env.REACT_APP_UPLOAD_URL;
 
         const downloadFile = async (url: string) => {
             try {
-                const response = await fetch(url);
+                const response = await fetch(url, { mode: "cors" }); // Thêm mode: "cors" để tránh lỗi chặn tải xuống
+                if (!response.ok) throw new Error("Lỗi tải file");
+
                 const blob = await response.blob();
                 const blobUrl = window.URL.createObjectURL(blob);
 
+                // Tạo thẻ <a> để tải file
                 const link = document.createElement("a");
                 link.href = blobUrl;
                 link.setAttribute("download", url.split("/").pop() || "file_download"); // Đặt tên file tải xuống
                 document.body.appendChild(link);
                 link.click();
 
-                // Dọn dẹp bộ nhớ sau khi tải xong
+                // Xóa URL tạm sau khi tải xong
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(blobUrl);
             } catch (error) {
                 console.error("Lỗi tải file:", error);
+                alert("Không thể tải file. Vui lòng thử lại!");
             }
         };
         return (
