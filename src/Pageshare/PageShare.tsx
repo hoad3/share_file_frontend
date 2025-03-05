@@ -29,10 +29,10 @@ const PageShare = () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
         })
-            .then((res) => res.text()) // Nhận dữ liệu dạng text
+            .then((res) => res.text())
             .then((data) => {
                 if (!data) return;
-                setQrImage(data.trim()); // Lưu URL vào state
+                setQrImage(data.trim());
             })
             .catch((err) => console.error("Lỗi tải QR:", err));
     }, [userid]);
@@ -57,18 +57,24 @@ const PageShare = () => {
 
         const formData = new FormData();
         formData.append("file", selectedFile);
-        formData.append("userId", userid!); // Chuyển userid thành string
+        formData.append("userId", userid!);
 
         try {
-            const response = await fetch(`${UPLOAD_URL}/api/upfile`, { // ✅ Đúng URL
+            const response = await fetch(`${UPLOAD_URL}/api/upfile`, {
                 method: "POST",
                 body: formData,
             });
 
-            const result = await response.json(); // ✅ Lấy phản hồi JSON
+            const result = await response.json();
 
             if (response.ok) {
-                setUploadMessage(`Tải file lên thành công! Tên file: ${result.FileName}`);
+                setUploadMessage(`Tải file lên thành công!`);
+
+                // ✅ Gọi lại API lấy danh sách file sau khi upload thành công
+                fetch(`${FILES_URL}/api/getfileuser?userId=${userid}`)
+                    .then((res) => res.json())
+                    .then((data) => setFileList(data)) // Cập nhật danh sách file ngay
+                    .catch((err) => console.error("Lỗi lấy danh sách file:", err));
             } else {
                 setUploadMessage(`Lỗi khi tải file: ${result.Message || "Không rõ nguyên nhân"}`);
             }
@@ -78,56 +84,20 @@ const PageShare = () => {
         }
     };
 
-    // return (
-    //     <div className="w-full h-screen flex justify-center items-center bg-gray-800">
-    //         <div className="w-2/4 h-auto flex-col border-gray-100 p-5 bg-white rounded-lg shadow-lg">
-    //             <div className="flex justify-center items-center mb-4">
-    //                 <img src={qrImage} alt="QR Code" className="w-80 h-80" />
-    //             </div>
-    //
-    //             {/* Upload File Section */}
-    //             <div className="flex flex-col items-center gap-4">
-    //                 <input
-    //                     type="file"
-    //                     onChange={handleFileChange}
-    //                     className="border p-2 rounded-lg"
-    //                 />
-    //                 <button
-    //                     onClick={handleUpload}
-    //                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-    //                 >
-    //                     Upload File
-    //                 </button>
-    //                 {uploadMessage && <p className="text-red-500">{uploadMessage}</p>}
-    //             </div>
-    //
-    //             {/* 🟢 Hiển thị danh sách file */}
-    //             <div className="mt-6">
-    //                 <h3 className="text-lg font-semibold mb-2">Danh sách file đã tải lên:</h3>
-    //                 <ul className="space-y-2">
-    //                     {fileList.length === 0 ? (
-    //                         <p>Không có file nào.</p>
-    //                     ) : (
-    //                         fileList.map((fileUrl, index) => (
-    //                             <li key={index} className="flex justify-between items-center p-2 border-b">
-    //                                 <span className="text-blue-600">{fileUrl.split("/").pop()}</span>
-    //                                 <a
-    //                                     href={fileUrl}
-    //                                     download={fileUrl}
-    //                                     target="_blank"
-    //                                     rel="noopener noreferrer"
-    //                                     className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition"
-    //                                 >
-    //                                     Tải xuống
-    //                                 </a>
-    //                             </li>
-    //                         ))
-    //                     )}
-    //                 </ul>
-    //             </div>
-    //         </div>
-    //     </div>
-    // );
+    const downloadFile = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.download = url.split("/").pop() || "downloaded_file";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Lỗi tải file:", error);
+        }
+    };
     return (
         <div className="w-full h-screen flex justify-center items-center bg-gray-800 px-4">
             <div className="w-full max-w-md h-auto flex flex-col border-gray-100 p-5 bg-white rounded-lg shadow-lg">
@@ -152,24 +122,21 @@ const PageShare = () => {
                 </div>
 
                 {/* 🟢 Hiển thị danh sách file */}
-                <div className="mt-6">
+                <div className="mt-6 max-h-48 overflow-y-auto">
                     <h3 className="text-lg font-semibold mb-2 text-center">Danh sách file đã tải lên:</h3>
                     <ul className="space-y-2">
                         {fileList.length === 0 ? (
                             <p className="text-center">Không có file nào.</p>
                         ) : (
                             fileList.map((fileUrl, index) => (
-                                <li key={index} className="flex flex-col sm:flex-row justify-between items-center p-2 border-b gap-2">
-                                    <span className="text-blue-600 text-center">{fileUrl.split("/").pop()}</span>
-                                    <a
-                                        href={fileUrl}
-                                        download={fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="bg-green-500 text-white px-3 py-1 w-full sm:w-auto rounded-lg text-center hover:bg-green-600 transition"
+                                <li key={index} className="flex justify-between items-center p-2 border-b gap-2">
+                                    <span className="text-blue-600 truncate w-2/3">{fileUrl.split("/").pop()}</span>
+                                    <button
+                                        onClick={() => downloadFile(fileUrl)}
+                                        className="bg-green-500 text-white px-3 py-1 rounded-lg text-center hover:bg-green-600 transition"
                                     >
                                         Tải xuống
-                                    </a>
+                                    </button>
                                 </li>
                             ))
                         )}
